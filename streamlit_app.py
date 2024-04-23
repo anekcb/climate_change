@@ -2,7 +2,6 @@ import streamlit as st
 import replicate
 import os
 import requests
-import asyncio
 
 # App title
 st.set_page_config(page_title="Weather Bot ")
@@ -82,12 +81,12 @@ if st.session_state.messages[-1]["role"] != "assistant":
     st.session_state.messages.append(message)
 
 # Weather API
-import urllib.request
+import requests
 
 if st.button('Get Weather'):
-    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=96dc6afa241edb49eced0025e4730496"
-    response = urllib.request.urlopen(weather_url)
-    weather_data = json.loads(response.read().decode('utf-8'))
+    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=YOUR_OPENWEATHERMAP_API_KEY"
+    response = requests.get(weather_url)
+    weather_data = response.json()
     st.write(f"Weather in {location}: {weather_data['weather'][0]['description']}")
     st.write(f"Temperature: {weather_data['main']['temp']}°C")
     st.write(f"Humidity: {weather_data['main']['humidity']}%")
