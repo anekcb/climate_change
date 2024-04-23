@@ -82,12 +82,11 @@ if st.session_state.messages[-1]["role"] != "assistant":
 
 # Weather API
 import requests
-
 if st.button('Get Weather'):
     weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=96dc6afa241edb49eced0025e4730496"
     response = requests.get(weather_url)
     weather_data = response.json()
-    st.write(f"Weather in {location}: {weather_data['weather'][0]['description']}")
-    st.write(f"Temperature: {weather_data['main']['temp']}°C")
-    st.write(f"Humidity: {weather_data['main']['humidity']}%")
-    st.write(f"Wind Speed: {weather_data['wind']['speed']} m/s")
+    st.markdown(f"Weather in {location}: {weather_data['weather'][0]['description']")  # Use st.markdown instead of st.write
+    st.markdown(f"Temperature: {weather_data['main']['temp']}°C")
+    st.markdown(f"Humidity: {weather_data['main']['humidity']}%")
+    st.markdown(f"Wind Speed: {weather_data['wind']['speed']} m/s")
