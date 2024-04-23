@@ -88,7 +88,7 @@ if st.button('Get Weather'):
         async with aiohttp.ClientSession() as session:
             async with session.get(weather_url) as response:
                 return await response.json()
-    weather_data = await get_weather_data()
+    weather_data = asyncio.run(get_weather_data())
     st.write(f"Weather in {location}: {weather_data['weather'][0]['description']}")
     st.write(f"Temperature: {weather_data['main']['temp']}°C")
     st.write(f"Humidity: {weather_data['main']['humidity']}%")
