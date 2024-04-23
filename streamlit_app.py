@@ -66,7 +66,9 @@ def generate_llama2_response(prompt_input):
 def get_weather_data(city, api_key):
     base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
     response = requests.get(base_url)
-    if response.status_code == 200:
+    if response.status_code == 401:
+        return f"Invalid API key. Please check your API key and try again."
+    elif response.status_code == 200:
         data = response.json()
         if "weather" in data and len(data["weather"]) > 0 and "description" in data["weather"][0]:
             weather = data["weather"][0]["description"]
