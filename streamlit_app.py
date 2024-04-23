@@ -1,13 +1,14 @@
 import streamlit as st
 import replicate
 import os
+import requests
 
 # App title
-st.set_page_config(page_title="🦙💬 Llama 2 Chatbot")
+st.set_page_config(page_title="Weather Bot ")
 
 # Replicate Credentials
 with st.sidebar:
-    st.title('🦙💬 Llama 2 Chatbot')
+    st.title('Weather Bot')
     if 'REPLICATE_API_TOKEN' in st.secrets:
         st.success('API key already provided!', icon='✅')
         replicate_api = st.secrets['REPLICATE_API_TOKEN']
@@ -16,11 +17,14 @@ with st.sidebar:
         if not (replicate_api.startswith('r8_') and len(replicate_api)==40):
             st.warning('Please enter your credentials!', icon='⚠️')
         else:
-            st.success('Proceed to entering your prompt message!', icon='👉')
+            st.success('Proceed to entering your location!', icon='👉')
 
     # Refactored from https://github.com/a16z-infra/llama2-chatbot
+    st.subheader('Location')
+    location = st.sidebar.text_input('Enter your location (City, State/Province, Country)', key='location')
+
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model')
+    selected_model = st.sidebar.selectbox('Choose a model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model')
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
@@ -75,3 +79,13 @@ if st.session_state.messages[-1]["role"] != "assistant":
             placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
+
+# Weather API
+if st.button('Get Weather'):
+    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=YOUR_OPENWEATHERMAP_API_KEY"
+    response = requests.get(weather_url)
+    weather_data = response.json()
+    st.write(f"Weather in {location}: {weather_data['weather'][0]['description']}")
+    st.write(f"Temperature: {weather_data['main']['temp']}°C")
+    st.write(f"Humidity: {weather_data['main']['humidity']}%")
+    st.write(f"Wind Speed: {weather_data['wind']['speed']} m/s")
