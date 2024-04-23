@@ -63,9 +63,7 @@ def generate_llama2_response(prompt_input):
     return output
 
 # Get current weather data
-def get_weather_data():
-    api_key = "96dc6afa241edb49eced0025e4730496"
-    city = "London"  # Replace with your city
+def get_weather_data(city, api_key):
     base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
     response = requests.get(base_url)
     data = response.json()
@@ -73,25 +71,34 @@ def get_weather_data():
     temperature = data["main"]["temp"]
     return f"The current weather in {city} is {weather} with a temperature of {temperature}°C."
 
-# Add weather data to chat
-st.session_state.messages.append({"role": "assistant", "content": get_weather_data()})
+# Add weather column
+weather_column, chat_column = st.columns(2)
 
-# User-provided prompt
-if prompt := st.chat_input(disabled=not replicate_api):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
+with weather_column:
+    st.header("Weather")
+    api_key = st.text_input("Enter your OpenWeatherMap API key:")
+    city = st.text_input("Enter the city:")
+    if st.button("Get Weather"):
+        weather_data = get_weather_data(city, api_key)
+        st.write(weather_data)
 
-# Generate a new response if last message is not from assistant
-if st.session_state.messages[-1]["role"] != "assistant":
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = generate_llama2_response(prompt)
-            placeholder = st.empty()
-            full_response = ''
-            for item in response:
-                full_response += item
+with chat_column:
+    # User-provided prompt
+    if prompt := st.chat_input(disabled=not replicate_api):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.write(prompt)
+
+    # Generate a new response if last message is not from assistant
+    if st.session_state.messages[-1]["role"] != "assistant":
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = generate_llama2_response(prompt)
+                placeholder = st.empty()
+                full_response = ''
+                for item in response:
+                    full_response += item
+                    placeholder.markdown(full_response)
                 placeholder.markdown(full_response)
-            placeholder.markdown(full_response)
-    message = {"role": "assistant", "content": full_response}
-    st.session_state.messages.append(message)
+        message = {"role": "assistant", "content": full_response}
+        st.session_state.messages.append(message)
