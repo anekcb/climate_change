@@ -4,11 +4,11 @@ import os
 import requests
 
 # App title
-st.set_page_config(page_title="Weather Bot ")
+st.set_page_config(page_title="🦙💬 Llama 2 Chatbot")
 
 # Replicate Credentials
 with st.sidebar:
-    st.title('Weather Bot')
+    st.title('🦙💬 Llama 2 Chatbot')
     if 'REPLICATE_API_TOKEN' in st.secrets:
         st.success('API key already provided!', icon='✅')
         replicate_api = st.secrets['REPLICATE_API_TOKEN']
@@ -17,14 +17,11 @@ with st.sidebar:
         if not (replicate_api.startswith('r8_') and len(replicate_api)==40):
             st.warning('Please enter your credentials!', icon='⚠️')
         else:
-            st.success('Proceed to entering your location!', icon='👉')
+            st.success('Proceed to entering your prompt message!', icon='👉')
 
     # Refactored from https://github.com/a16z-infra/llama2-chatbot
-    st.subheader('Location')
-    location = st.sidebar.text_input('Enter your location (City, State/Province, Country)', key='location')
-
     st.subheader('Models and parameters')
-    selected_model = st.sidebar.selectbox('Choose a model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model')
+    selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model')
     if selected_model == 'Llama2-7B':
         llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
     elif selected_model == 'Llama2-13B':
@@ -32,6 +29,11 @@ with st.sidebar:
     else:
         llm = 'replicate/llama70b-v2-chat:e951f18578850b652510200860fc4ea62b3b16fac280f83ff32282f87bbd2e48'
     
+    temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
+    top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+    max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
+    
+    st.markdown('📖 Learn how to build this app in this [blog](https://blog.streamlit.io/how-to-build-a-llama-2-chatbot/)!')
 os.environ['REPLICATE_API_TOKEN'] = replicate_api
 
 # Store LLM generated responses
@@ -60,6 +62,20 @@ def generate_llama2_response(prompt_input):
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
     return output
 
+# Get current weather data
+def get_weather_data():
+    api_key = "96dc6afa241edb49eced0025e4730496"
+    city = "London"  # Replace with your city
+    base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
+    response = requests.get(base_url)
+    data = response.json()
+    weather = data["weather"][0]["description"]
+    temperature = data["main"]["temp"]
+    return f"The current weather in {city} is {weather} with a temperature of {temperature}°C."
+
+# Add weather data to chat
+st.session_state.messages.append({"role": "assistant", "content": get_weather_data()})
+
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api):
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -79,14 +95,3 @@ if st.session_state.messages[-1]["role"] != "assistant":
             placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
-
-# Weather API
-import requests
-if st.button('Get Weather'):
-    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=96dc6afa241edb49eced0025e4730496"
-    response = requests.get(weather_url)
-    weather_data = response.json()
-    st.markdown(f"Weather in {location}: {weather_data['weather'][0]['description']") } # Use st.markdown instead of st.write
-    st.markdown(f"Temperature: {weather_data['main']['temp']}°C")
-    st.markdown(f"Humidity: {weather_data['main']['humidity']}%")
-    st.markdown(f"Wind Speed: {weather_data['wind']['speed']} m/s")
