@@ -84,7 +84,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
 import requests
 
 if st.button('Get Weather'):
-    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=YOUR_OPENWEATHERMAP_API_KEY"
+    weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=96dc6afa241edb49eced0025e4730496"
     response = requests.get(weather_url)
     weather_data = response.json()
     st.write(f"Weather in {location}: {weather_data['weather'][0]['description']}")
