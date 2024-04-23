@@ -66,10 +66,16 @@ def generate_llama2_response(prompt_input):
 def get_weather_data(city, api_key):
     base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
     response = requests.get(base_url)
-    data = response.json()
-    weather = data["weather"][0]["description"]
-    temperature = data["main"]["temp"]
-    return f"The current weather in {city} is {weather} with a temperature of {temperature}°C."
+    if response.status_code == 200:
+        data = response.json()
+        if "weather" in data and len(data["weather"]) > 0 and "description" in data["weather"][0]:
+            weather = data["weather"][0]["description"]
+            temperature = data["main"]["temp"]
+            return f"The current weather in {city} is {weather} with a temperature of {temperature}°C."
+        else:
+            return f"Failed to retrieve weather data for {city}."
+    else:
+        return f"Failed to retrieve weather data for {city}. Status code: {response.status_code}"
 
 # Add weather column
 weather_column, chat_column = st.columns(2)
