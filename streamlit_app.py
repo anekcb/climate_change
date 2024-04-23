@@ -82,15 +82,12 @@ if st.session_state.messages[-1]["role"] != "assistant":
     st.session_state.messages.append(message)
 
 # Weather API
+import urllib.request
+
 if st.button('Get Weather'):
     weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=96dc6afa241edb49eced0025e4730496"
-    async def get_weather_data():
-        async with aiohttp.ClientSession() as session:
-            async with session.get(weather_url) as response:
-                return await response.json()
-    async def get_weather_data_sync():
-        return await get_weather_data()
-    weather_data = asyncio.run(get_weather_data_sync())
+    response = urllib.request.urlopen(weather_url)
+    weather_data = json.loads(response.read().decode('utf-8'))
     st.write(f"Weather in {location}: {weather_data['weather'][0]['description']}")
     st.write(f"Temperature: {weather_data['main']['temp']}°C")
     st.write(f"Humidity: {weather_data['main']['humidity']}%")
