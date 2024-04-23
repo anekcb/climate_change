@@ -86,7 +86,7 @@ if st.button('Get Weather'):
     weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid=96dc6afa241edb49eced0025e4730496"
     response = requests.get(weather_url)
     weather_data = response.json()
-    st.markdown(f"Weather in {location}: {weather_data['weather'][0]['description']")  # Use st.markdown instead of st.write
+    st.markdown(f"Weather in {location}: {weather_data['weather'][0]['description']") } # Use st.markdown instead of st.write
     st.markdown(f"Temperature: {weather_data['main']['temp']}°C")
     st.markdown(f"Humidity: {weather_data['main']['humidity']}%")
     st.markdown(f"Wind Speed: {weather_data['wind']['speed']} m/s")
