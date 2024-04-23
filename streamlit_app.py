@@ -90,7 +90,7 @@ if st.button('Get Weather'):
                 return await response.json()
     async def get_weather_data_sync():
         return await get_weather_data()
-    weather_data = await get_weather_data_sync()
+    weather_data = asyncio.run(get_weather_data_sync())
     st.write(f"Weather in {location}: {weather_data['weather'][0]['description']}")
     st.write(f"Temperature: {weather_data['main']['temp']}°C")
     st.write(f"Humidity: {weather_data['main']['humidity']}%")
