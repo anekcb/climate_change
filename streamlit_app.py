@@ -1,10 +1,9 @@
 import streamlit as st
 import replicate
-import requests
 import os
 
 # App title
-st.set_page_config(page_title="ECOWATCH")
+st.set_page_config(page_title="🦙💬 Llama 2 Chatbot")
 
 # Replicate Credentials
 with st.sidebar:
@@ -80,18 +79,4 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 placeholder.markdown(full_response)
             placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
-
-    # Get weather details
-    location = st.text_input('Enter location (e.g. New York, NY):')
-    if location:
-        response = requests.get(f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid=0d77fe8a900e85d0d7a6a25468afffa3')
-        weather_data = response.json()
-        weather = f"Weather in {location}: {weather_data['weather'][0]['description']} with a temperature of {weather_data['main']['temp']}°C."
-        message["content"] += f"\n{weather}"
-
     st.session_state.messages.append(message)
-
-# Display chat messages
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
