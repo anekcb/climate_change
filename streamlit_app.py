@@ -58,7 +58,7 @@ def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "How may I assist you with climate-related queries?"}]
 st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
-# Function for generating LLaMA2 response
+# Function for generating LLaMA2 response 
 def generate_llama2_response(prompt_input):
     string_dialogue = "You are an environmental chatbot named EcoGuide. Please provide information and advice on climate-related topics only and say sorry for any other topics unrelated to climate or weather. This includes questions related to climate change, environmental issues, sustainable practices, renewable energy, and biodiversity conservation. strictly avoid responding to non-environmental topics or questions that are not related to climate or environmental concerns."
     for dict_message in st.session_state.messages:
