@@ -175,7 +175,6 @@ st.title("ECOWATCH 🍃")
 location = st.text_input("Enter your location for weather:", "New York")
 
 # Get weather data
-weather_prompt = None
 if st.button("Get Weather"):
     response = requests.get(f"{BASE_URL}?q={location}&appid={API_KEY}&units=metric")
     if response.status_code == 200:
@@ -189,9 +188,9 @@ if st.button("Get Weather"):
         st.write(f"Humidity: {humidity}%")
         st.write(f"Wind Speed: {wind_speed} m/s")
         
-        # Formulate weather prompt for ECOWATCH
-        weather_prompt = f"The current weather in {location} is {weather_desc.lower()}. The temperature is {temperature}°C, humidity is {humidity}%, and wind speed is {wind_speed} m/s. What else would you like to know?"
-        
+        # Store weather data as a prompt for Ecowatch
+        weather_prompt = f"Current weather in {location}: {weather_desc}, {temperature}°C, {humidity}%, {wind_speed} m/s"
+        st.session_state.weather_prompt = weather_prompt
     else:
         st.error("Failed to retrieve weather data")
 
@@ -242,16 +241,22 @@ if prompt := st.chat_input(disabled=not replicate_api):
     with st.chat_message("user"):
         st.write(prompt)
 
-# Generate a new response if last message is not from assistant
-if st.session_state.messages[-1]["role"] != "assistant" and weather_prompt:
-    with st.chat_message("assistant"):
-        with st.spinner("Reflecting..."):
-            response = generate_llama2_response(weather_prompt)
-            placeholder = st.empty()
-            full_response = ''
-            for item in response:
-                full_response += item
+    # If weather data is available, use it as a prompt
+    if 'weather_prompt' in st.session_state:
+        prompt_input = st.session_state.weather_prompt + " " + prompt
+    else:
+        prompt_input = prompt
+
+    # Generate a new response if last message is not from assistant
+    if st.session_state.messages[-1]["role"] != "assistant":
+        with st.chat_message("assistant"):
+            with st.spinner("Reflecting..."):
+                response = generate_llama2_response(prompt_input)
+                placeholder = st.empty()
+                full_response = ''
+                for item in response:
+                    full_response += item
+                    placeholder.markdown(full_response)
                 placeholder.markdown(full_response)
-            placeholder.markdown(full_response)
-    message = {"role": "assistant", "content": full_response}
-    st.session_state.messages.append(message)
+        message = {"role": "assistant", "content": full_response}
+        st.session_state.messages.append(message)
