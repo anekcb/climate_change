@@ -162,6 +162,7 @@ import streamlit as st
 import requests
 import json
 import replicate
+import os
 
 # Set your OpenWeatherMap API key
 API_KEY = "0d77fe8a900e85d0d7a6a25468afffa3"
@@ -174,6 +175,7 @@ st.title("ECOWATCH 🍃")
 location = st.text_input("Enter your location for weather:", "New York")
 
 # Get weather data
+weather_prompt = None
 if st.button("Get Weather"):
     response = requests.get(f"{BASE_URL}?q={location}&appid={API_KEY}&units=metric")
     if response.status_code == 200:
@@ -186,22 +188,10 @@ if st.button("Get Weather"):
         st.write(f"Temperature: {temperature}°C")
         st.write(f"Humidity: {humidity}%")
         st.write(f"Wind Speed: {wind_speed} m/s")
-
-        # Pass weather data as a prompt to the LLaMA2 model
-        prompt = f"Please provide information about the current weather in {location}. The weather is {weather_desc} with a temperature of {temperature}°C, humidity of {humidity}% and wind speed of {wind_speed} m/s."
-        st.session_state.messages = [{"role": "assistant", "content": "How may I assist you with climate-related queries?"}]
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("assistant"):
-            with st.spinner("Reflecting..."):
-                response = generate_llama2_response(prompt)
-                placeholder = st.empty()
-                full_response = ''
-                for item in response:
-                    full_response += item
-                    placeholder.markdown(full_response)
-                placeholder.markdown(full_response)
-        message = {"role": "assistant", "content": full_response}
-        st.session_state.messages.append(message)
+        
+        # Formulate weather prompt for ECOWATCH
+        weather_prompt = f"The current weather in {location} is {weather_desc.lower()}. The temperature is {temperature}°C, humidity is {humidity}%, and wind speed is {wind_speed} m/s. What else would you like to know?"
+        
     else:
         st.error("Failed to retrieve weather data")
 
@@ -217,8 +207,21 @@ with st.sidebar:
             st.warning('Please enter your credentials!', icon='⚠️')
         else:
             st.success('Proceed to entering your prompt message!', icon='👉')
-    st.markdown('Go back to main page [home](https://blog.streamlit.io/how-to-build-a-llla-2-chatbot/)!')
+    st.markdown('Go back to main page [home](https://blog.streamlit.io/how-to-build-a-llama-2-chatbot/)!')
 os.environ['REPLICATE_API_TOKEN'] = replicate_api
+
+# Store LLM generated responses
+if "messages" not in st.session_state.keys():
+    st.session_state.messages = [{"role": "assistant", "content": "How may I assist you with climate-related queries?"}]
+
+# Display or clear chat messages
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
+
+def clear_chat_history():
+    st.session_state.messages = [{"role": "assistant", "content": "How may I assist you with climate-related queries?"}]
+st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
 # Function for generating LLaMA2 response
 def generate_llama2_response(prompt_input):
@@ -240,10 +243,10 @@ if prompt := st.chat_input(disabled=not replicate_api):
         st.write(prompt)
 
 # Generate a new response if last message is not from assistant
-if st.session_state.messages[-1]["role"] != "assistant":
+if st.session_state.messages[-1]["role"] != "assistant" and weather_prompt:
     with st.chat_message("assistant"):
         with st.spinner("Reflecting..."):
-            response = generate_llama2_response(prompt)
+            response = generate_llama2_response(weather_prompt)
             placeholder = st.empty()
             full_response = ''
             for item in response:
