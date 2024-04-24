@@ -1,7 +1,7 @@
 import streamlit as st
 import replicate
-import os
 import requests
+import os
 
 # App title
 st.set_page_config(page_title="🦙💬 Llama 2 Chatbot")
@@ -62,51 +62,31 @@ def generate_llama2_response(prompt_input):
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
     return output
 
-# Get current weather data
-def get_weather_data(city, api_key):
-    base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
-    response = requests.get(base_url)
-    if response.status_code == 401:
-        return f"Invalid API key. Please check your API key and try again."
-    elif response.status_code == 200:
-        data = response.json()
-        if "weather" in data and len(data["weather"]) > 0 and "description" in data["weather"][0]:
-            weather = data["weather"][0]["description"]
-            temperature = data["main"]["temp"]
-            return f"The current weather in {city} is {weather} with a temperature of {temperature}°C."
-        else:
-            return f"Failed to retrieve weather data for {city}."
-    else:
-        return f"Failed to retrieve weather data for {city}. Status code: {response.status_code}"
+# User-provided prompt
+if prompt := st.chat_input(disabled=not replicate_api):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.write(prompt)
 
-# Add weather column
-weather_column, chat_column = st.columns(2)
-
-with weather_column:
-    st.header("Weather")
-    api_key = st.text_input("Enter your OpenWeatherMap API key:")
-    city = st.text_input("Enter the city:")
-    if st.button("Get Weather"):
-        weather_data = get_weather_data(city, api_key)
-        st.write(weather_data)
-
-with chat_column:
-    # User-provided prompt
-    if prompt := st.chat_input(disabled=not replicate_api):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.write(prompt)
-
-    # Generate a new response if last message is not from assistant
-    if st.session_state.messages[-1]["role"] != "assistant":
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                response = generate_llama2_response(prompt)
-                placeholder = st.empty()
-                full_response = ''
-                for item in response:
-                    full_response += item
-                    placeholder.markdown(full_response)
+# Generate a new response if last message is not from assistant
+if st.session_state.messages[-1]["role"] != "assistant":
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response = generate_llama2_response(prompt)
+            placeholder = st.empty()
+            full_response = ''
+            for item in response:
+                full_response += item
                 placeholder.markdown(full_response)
-        message = {"role": "assistant", "content": full_response}
-        st.session_state.messages.append(message)
+            placeholder.markdown(full_response)
+    message = {"role": "assistant", "content": full_response}
+
+    # Get weather details
+    location = st.text_input('Enter location (e.g. New York, NY):')
+    if location:
+        response = requests.get(f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid=0d77fe8a900e85d0d7a6a25468afffa3')
+        weather_data = response.json()
+        weather = f"Weather in {location}: {weather_data['weather'][0]['description']} with a temperature of {weather_data['main']['temp']}°C."
+        message["content"] += f"\n{weather}"
+
+    st.session_state.messages.append(message)
