@@ -69,48 +69,34 @@ if st.session_state.messages[-1]["role"] != "assistant":
 import streamlit as st
 import requests
 import json
-import os
 import replicate
+import os
 
 # Set your OpenWeatherMap API key
 API_KEY = "0d77fe8a900e85d0d7a6a25468afffa3"
-
-# Set the base URL for the OpenWeatherMap API
 BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
 
-# Create a Streamlit app
-st.title("Weather App")
-st.markdown("Enter your location to get the current weather")
+# App title
+st.title("ECOWATCH 🍃")
 
-# Get the user's location
-location = st.text_input("Location")
+# Get user's location for weather
+location = st.text_input("Enter your location for weather:", "New York")
 
-# Get the user's location
+# Get weather data
 if st.button("Get Weather"):
-    # Make a GET request to the OpenWeatherMap API
     response = requests.get(f"{BASE_URL}?q={location}&appid={API_KEY}&units=metric")
-
-    # Check if the request was successful
     if response.status_code == 200:
-        # Parse the JSON response
-        data = json.loads(response.text)
-
-        # Get the weather data
-        weather = data["weather"][0]["description"]
-        temperature = data["main"]["temp"]
-        humidity = data["main"]["humidity"]
-        wind_speed = data["wind"]["speed"]
-
-        # Display the weather data
-        st.markdown(f"Weather: {weather}")
-        st.markdown(f"Temperature: {temperature}°C")
-        st.markdown(f"Humidity: {humidity}%")
-        st.markdown(f"Wind Speed: {wind_speed} m/s")
+        weather_data = json.loads(response.text)
+        weather_desc = weather_data["weather"][0]["description"]
+        temperature = weather_data["main"]["temp"]
+        humidity = weather_data["main"]["humidity"]
+        wind_speed = weather_data["wind"]["speed"]
+        st.write(f"Weather: {weather_desc}")
+        st.write(f"Temperature: {temperature}°C")
+        st.write(f"Humidity: {humidity}%")
+        st.write(f"Wind Speed: {wind_speed} m/s")
     else:
         st.error("Failed to retrieve weather data")
-
-# App title
-st.set_page_config(page_title="ECOWATCH")
 
 # Replicate Credentials
 with st.sidebar:
@@ -141,7 +127,6 @@ def clear_chat_history():
 st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
 # Function for generating LLaMA2 response
-# Refactored from https://github.com/a16z-infra/llama2-chatbot
 def generate_llama2_response(prompt_input):
     string_dialogue = "You are an environmental chatbot named EcoGuide. Please provide information and advice on climate-related topics only and say sorry for any other topics unrelated to climate or weather. This includes questions related to climate change, environmental issues, sustainable practices, renewable energy, and biodiversity conservation. strictly avoid responding to non-environmental topics or questions that are not related to climate or environmental concerns."
     for dict_message in st.session_state.messages:
@@ -173,3 +158,4 @@ if st.session_state.messages[-1]["role"] != "assistant":
             placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
+
